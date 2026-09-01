@@ -40,6 +40,11 @@ jobs:
         with:
           context: aula1-containers
           push: true
+          # ACI não entende o índice OCI gerado pelos atestados de
+          # proveniência/SBOM (erro InvalidOsType com osType '<null>').
+          # Desligamos ambos para publicar um manifesto Docker simples.
+          provenance: false
+          sbom: false
           tags: |
             ghcr.io/${{ github.repository_owner }}/sentiment-api:v1
             ghcr.io/${{ github.repository_owner }}/sentiment-api:latest
