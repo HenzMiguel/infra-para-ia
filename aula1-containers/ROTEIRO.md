@@ -70,21 +70,28 @@ az acr create \
 
 ⚠️ O nome do ACR é único no mundo e aceita apenas letras minúsculas e números. Se der "name already in use", acrescente números.
 
-## Etapa 6 — Build da imagem na nuvem (~15 min)
+## Etapa 6 — Trazer a imagem para o seu registry (~15 min)
 
-Ninguém aqui tem Docker instalado, e não precisa: o `az acr build` envia o código para o Azure, que constrói a imagem lá e já a publica no seu registry.
+O build desta imagem acontece por **integração contínua**: a cada mudança no repositório, o GitHub Actions executa o Dockerfile e publica a imagem pronta no registry público do GitHub (GHCR). É assim que times profissionais trabalham: ninguém constrói imagem de produção na própria máquina. O professor vai mostrar o log desse build ao vivo (repositório → aba **Actions**): cada `Step` do log corresponde a uma linha do Dockerfile — são as camadas!
+
+*(Por que não construímos direto no Azure? O comando de build do ACR é bloqueado em contas de avaliação gratuita, como medida antiabuso. Em uma assinatura corporativa, o mesmo fluxo funcionaria com `az acr build`.)*
+
+Importe a imagem pública para o SEU registry privado:
 
 ```bash
-az acr build --registry acrSEUNOME --image sentiment-api:v1 .
+az acr import \
+  --name acrSEUNOME \
+  --source ghcr.io/PROF-USUARIO/sentiment-api:v1 \
+  --image sentiment-api:v1
 ```
 
-Observe o log: cada `Step` corresponde a uma linha do Dockerfile (são as camadas da imagem!). Ao final, procure a linha com `Run ID ... was successful`.
-
-Confira a imagem publicada:
+Confira a imagem publicada no seu ACR:
 
 ```bash
 az acr repository list --name acrSEUNOME --output table
 ```
+
+A partir daqui, a imagem é sua: fica no seu registry, com suas credenciais, como se você mesmo a tivesse construído.
 
 ## Etapa 7 — Executar o container (ACI, ~15 min)
 
@@ -153,7 +160,8 @@ Confirme no portal que o resource group `aula1-rg` sumiu (pode levar alguns minu
 
 | Sintoma | O que fazer |
 |---|---|
-| Build falhou | Leia a ÚLTIMA linha do erro. Confira se está na pasta certa: `ls` deve mostrar o `Dockerfile`. |
+| `az acr import` falha com "unauthorized" | A imagem no GHCR não está pública, ou a URL `ghcr.io/...` foi digitada errada. Avise o professor. |
+| "TasksOperationsNotAllowed" | Você tentou `az acr build`: esse comando é bloqueado em contas gratuitas. Use o `az acr import` da Etapa 6. |
 | Container não inicia | `az container logs --resource-group aula1-rg --name sentiment-api` |
 | Página não abre | Confira IP e porta `:8000`; aguarde 1-2 min após o create; o endereço é `http://` (não `https://`). |
 | "name already in use" no ACR | Escolha outro nome (acrescente números). |
@@ -161,7 +169,8 @@ Confirme no portal que o resource group `aula1-rg` sumiu (pode levar alguns minu
 
 ## Para levar para casa
 
-O roteiro inteiro é repetível na sua conta, do zero, em ~20 minutos. Desafios opcionais:
+O roteiro inteiro é repetível na sua conta, do zero, em ~20 minutos. Desafios opcionais (agora com o build nas SUAS mãos):
 
-1. Mude a mensagem do endpoint `/` em `api.py`, rode um novo build com a tag `v2` e atualize o container. Quantas camadas o build reaproveitou?
-2. Acrescente 10 frases suas ao `treinar_modelo.py`, rode `python treinar_modelo.py` e faça o build de novo. Você acabou de fazer um "deploy de modelo".
+1. Faça um **fork** do repositório no seu GitHub e habilite a aba Actions. Todo push seu agora dispara o build da SUA imagem (`ghcr.io/SEU-USUARIO/sentiment-api`). Torne o pacote público (Packages → Package settings → Change visibility).
+2. Mude a mensagem do endpoint `/` em `api.py`, faça push e acompanhe o build no Actions. Quantas camadas foram reaproveitadas do cache?
+3. Acrescente 10 frases suas ao `treinar_modelo.py`, rode `python treinar_modelo.py`, commit e push. Depois importe a sua imagem para o seu ACR e atualize o container: você acabou de fazer um "deploy de modelo" com CI.

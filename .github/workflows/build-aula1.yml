@@ -1,0 +1,45 @@
+# Constrói a imagem da Aula 1 e publica no GitHub Container Registry (GHCR).
+#
+# Roda automaticamente a cada push na main que altere a pasta aula1-containers/
+# (e também manualmente, pela aba Actions -> Run workflow).
+#
+# A imagem fica em: ghcr.io/<dono-do-repo>/sentiment-api:v1
+# IMPORTANTE: após a primeira execução, torne o pacote público em
+# GitHub -> seu perfil -> Packages -> sentiment-api -> Package settings ->
+# Change visibility -> Public. Sem isso, o `az acr import` dos alunos falha.
+
+name: build-aula1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "aula1-containers/**"
+      - ".github/workflows/build-aula1.yml"
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build e push da imagem
+        uses: docker/build-push-action@v6
+        with:
+          context: aula1-containers
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/sentiment-api:v1
+            ghcr.io/${{ github.repository_owner }}/sentiment-api:latest
