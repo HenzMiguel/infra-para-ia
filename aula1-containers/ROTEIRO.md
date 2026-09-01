@@ -27,6 +27,15 @@
 
 O Cloud Shell é um terminal Linux completo no navegador, já com `az`, `git` e `python` instalados. Nada precisa ser instalado no seu computador.
 
+4. **Antes de seguir, rode estes dois comandos** (registram na sua assinatura os serviços que usaremos; é feito uma única vez e leva ~2 min em segundo plano):
+
+```bash
+az provider register --namespace Microsoft.ContainerRegistry
+az provider register --namespace Microsoft.ContainerInstance
+```
+
+Pode ir para a Etapa 3 sem esperar. Se mais adiante algum comando falhar com `MissingSubscriptionRegistration`, é só aguardar um minuto e repetir o comando que falhou.
+
 ## Etapa 3 — Clonar o projeto (~5 min)
 
 ```bash
