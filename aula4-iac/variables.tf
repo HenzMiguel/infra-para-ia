@@ -42,3 +42,15 @@ variable "memoria" {
   type        = number
   default     = 1
 }
+
+variable "node_vm_size" {
+  description = "Tamanho da VM utilizada pelos nodes do AKS"
+  type        = string
+  default     = "Standard_B2as_v2"
+}
+
+variable "node_count" {
+  description = "Quantidade de nodes do AKS"
+  type        = number
+  default     = 1
+}
